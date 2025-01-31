@@ -25,11 +25,11 @@ end = 36  # 最后页数
 current_mapping_file = book/n9323jx_current.txt # 当前的术语表文档，会保留及合并到新术语表
 output_mapping_file = book/n9323jx_out.txt # 新术语表储存文档
 least_count = 2 # 最低出现次数，默认为 2，少于此次数的词语不会被包含
-min_len = 3 # 最低字数，默认为 3，少于此字数低词语不会被包含
+min_len = 3 # 最低字数，默认为 3，少于此字数的词语不会被包含
 dict = JMdict_kata # 日文字典，如果术语在此字典存在，则不输出，默认为 JMdict_kata
 sakura_server = http://localhost:8080 # Sakura 翻译器 URL，默认为 http://localhost:8080
 ```
-2. 下载原有低术语表，放在上述的 current_mapping_file 里
+2. 下载原有的术语表，放在上述的 current_mapping_file 里
 
 3. 打开 Sakura 翻译器
 
