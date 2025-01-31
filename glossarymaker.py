@@ -3,7 +3,7 @@ import re, requests, os, html, lxml.html
 
 class glossarymaker:
 
-    __kata_finder = re.compile('[\u30a1-\u30fa]+')
+    __kata_finder = re.compile('[\u30a1-\u30fa\u30fc-\u30fe]+')
     __site_url = 'https://ncode.syosetu.com/'
     __headers = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
@@ -143,6 +143,8 @@ class glossarymaker:
 
     def get_glossary(self):
         result = ""
-        for k,v in self.__glossary.items():
+        output = list(self.__glossary.items())
+        output.sort()
+        for k,v in output:
             result += k + " => " + v + "\n"
         return result
