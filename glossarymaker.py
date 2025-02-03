@@ -14,6 +14,7 @@ class glossarymaker:
     __encoding = 'utf-8'
     __counter = Counter()
     __glossary = {}
+    __samples = {}
 
     def count_page_kata(self, novel, page):
         url = self.__site_url + novel + '/' + str(page)
@@ -29,7 +30,10 @@ class glossarymaker:
         for para_elem in para_elems:
             para_text = para_elem.text_content().strip()
             if len(para_text) > 0:
-                self.__counter.update(self.__kata_finder.findall(para_text))
+                all_kata = self.__kata_finder.findall(para_text)
+                self.__counter.update(all_kata)
+                for kata in all_kata:
+                    self.__samples[kata] = para_text
                 count += 1
         print("Processed " + str(count) + " paragraphs from "+ url)
 
@@ -51,6 +55,11 @@ class glossarymaker:
         with open(dict_file) as file:
             for line in file:
                 self.__kata_dict.add(line.strip())
+
+    def del_tsu(self):
+        for key in list(self.__counter.keys()):
+            if key.endswith('ッ'):
+                del self.__counter[key]
 
     def del_simple(self, number):
         for key in list(self.__counter.keys()):
@@ -103,8 +112,12 @@ class glossarymaker:
         url = server + "/v1/chat/completions"
         i = 1
         ja_text = ""
+        sample_text = "根据以下例句:\n"
         mapping = {}
         for key in keys:
+            sample = self.__samples[key].replace('.',' ')
+            if len(sample) > 0:
+                sample_text += sample + "\n"
             ja_text += str(i) + "." + key + "\n"
             mapping[i] = key
             i += 1
@@ -116,11 +129,11 @@ class glossarymaker:
                     "content":"你是一个轻小说翻译模型，可以流畅通顺地以日本轻小说的风格将日文翻译成简体中文，并联系上下文正确使用人称代词，不擅自添加原文中没有的代词。"
                 }, {
                     "role":"user",
-                    "content":"将下面的日文文本翻译成中文：" + ja_text
+                    "content": sample_text + "将下面的日文文本翻译成中文：" + ja_text
                 }],
             "temperature":0.1,
             "top_p":0.3,
-            "max_tokens":100,
+            "max_tokens":500,
             "frequency_penalty":0
         }
         print("Calling Sakura at: " + url + " for " + str(i-1) + " items")
@@ -134,13 +147,16 @@ class glossarymaker:
                 for line in lines.split('\n'):
                     kv = line.split('.')
                     if len(kv) == 2:
-                        index = int(kv[0])
-                        key = mapping[index]
-                        value = kv[1].strip()
-                        if len(value) > 0 and not self.is_sound(value):
-                            self.__glossary[key] = value
-                        #print("Adding " + key + " = " + value)
-
+                        try:
+                            index = int(kv[0])
+                            if index <= 10 and index > 0:
+                                key = mapping[index]
+                                value = kv[1].strip()
+                                if len(value) > 0 and not self.is_sound(value):
+                                    self.__glossary[key] = value
+                                #print("Adding " + key + " = " + value)
+                        except:
+                            continue
     def get_glossary(self):
         result = ""
         output = list(self.__glossary.items())

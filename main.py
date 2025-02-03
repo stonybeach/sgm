@@ -7,6 +7,7 @@ default_sakura = "http://localhost:8080"
 def process(novel, start, end, jmdict, sakura_server, current_mapping_file, output_mapping_file, least, min_len):
     g=glossarymaker()
     g.count_novel_kata(novel,start,end)
+    g.del_tsu()
     g.del_simple(min_len)
     g.del_least(least)
     g.load_dict(jmdict)
