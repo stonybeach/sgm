@@ -33,7 +33,7 @@ class glossarymaker:
                 all_kata = self.__kata_finder.findall(para_text)
                 self.__counter.update(all_kata)
                 for kata in all_kata:
-                    if kata not in self.__samples or len(self.__samples[kata]) > len(para_text):
+                    if kata not in self.__samples or len(self.__samples[kata]) < len(para_text):
                         self.__samples[kata] = para_text
                 count += 1
         print("Processed " + str(count) + " paragraphs from "+ url)
@@ -106,14 +106,17 @@ class glossarymaker:
     def use_sakura(self, server):
         keys = list(self.__counter.keys())
         keys.sort()
-        for i in range(0, len(keys), 10):
-            self.use_sakura_batch(server, keys[i:i+10])
+        step = 10
+        for i in range(0, len(keys), step):
+            self.use_sakura_batch(server, keys[i:i+step])
 
     def use_sakura_batch(self, server, keys):
+        system_prompt = "你是一个轻小说翻译模型，可以流畅通顺地以日本轻小说的风格将日文翻译成简体中文，并联系上下文正确使用人称代词，不擅自添加原文中没有的代词。"
+        sample_text = "分析以下日文文本：\n"
+        user_prompt = "将下面的日文词语翻译成中文，不要英文或日文："
         url = server + "/v1/chat/completions"
         i = 1
         ja_text = ""
-        sample_text = "根据以下例句:\n"
         mapping = {}
         for key in keys:
             if key in self.__samples:
@@ -128,14 +131,15 @@ class glossarymaker:
             "messages":[
                 {
                     "role":"system",
-                    "content":"你是一个轻小说翻译模型，可以流畅通顺地以日本轻小说的风格将日文翻译成简体中文，并联系上下文正确使用人称代词，不擅自添加原文中没有的代词。"
+                    "content": system_prompt
                 }, {
                     "role":"user",
-                    "content": sample_text + "将下面的日文文本翻译成中文：" + ja_text
+                    #"content": user_prompt + ja_text
+                    "content": sample_text + user_prompt + ja_text
                 }],
             "temperature":0.1,
             "top_p":0.3,
-            "max_tokens":500,
+            "max_tokens":1000,
             "frequency_penalty":0
         }
         print("Calling Sakura at: " + url + " for " + str(i-1) + " items")
@@ -151,7 +155,7 @@ class glossarymaker:
                     if len(kv) == 2:
                         try:
                             index = int(kv[0])
-                            if index <= 10 and index > 0:
+                            if index <= len(keys) and index > 0:
                                 key = mapping[index]
                                 value = kv[1].strip()
                                 if len(value) > 0 and not self.is_sound(value):
