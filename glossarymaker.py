@@ -33,7 +33,8 @@ class glossarymaker:
                 all_kata = self.__kata_finder.findall(para_text)
                 self.__counter.update(all_kata)
                 for kata in all_kata:
-                    self.__samples[kata] = para_text
+                    if kata not in self.__samples or len(self.__samples[kata]) > len(para_text):
+                        self.__samples[kata] = para_text
                 count += 1
         print("Processed " + str(count) + " paragraphs from "+ url)
 
@@ -115,9 +116,10 @@ class glossarymaker:
         sample_text = "根据以下例句:\n"
         mapping = {}
         for key in keys:
-            sample = self.__samples[key].replace('.',' ')
-            if len(sample) > 0:
-                sample_text += sample + "\n"
+            if key in self.__samples:
+                sample = self.__samples[key]
+                if len(sample) > 0:
+                    sample_text += sample + "\n"
             ja_text += str(i) + "." + key + "\n"
             mapping[i] = key
             i += 1
